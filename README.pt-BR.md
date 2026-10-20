@@ -4,6 +4,10 @@
 
 Extensão do Chrome que lista quem você segue no Instagram e não te segue de volta.
 
+<p align="center">
+  <img src="docs/screenshot-pt-BR.png" alt="Painel do Follower Check listando contas que não te seguem de volta" width="420">
+</p>
+
 ## Instalação
 
 1. Abra `chrome://extensions`.

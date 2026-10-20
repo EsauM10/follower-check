@@ -4,6 +4,10 @@
 
 Chrome extension that lists the Instagram accounts you follow that don't follow you back.
 
+<p align="center">
+  <img src="docs/screenshot-en.png" alt="Follower Check panel listing accounts that don't follow back" width="420">
+</p>
+
 ## Installation
 
 1. Open `chrome://extensions`.
