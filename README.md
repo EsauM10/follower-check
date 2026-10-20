@@ -1,51 +1,55 @@
 # Follower Check
 
-Extensão do Chrome que lista quem você segue no Instagram e não te segue de volta.
+**English** | [Português](README.pt-BR.md)
 
-## Instalação
+Chrome extension that lists the Instagram accounts you follow that don't follow you back.
 
-1. Abra `chrome://extensions`.
-2. Ative o **Modo do desenvolvedor** (canto superior direito).
-3. Clique em **Carregar sem compactação** e selecione a pasta deste repositório (onde está o `manifest.json`).
+## Installation
 
-## Uso
+1. Open `chrome://extensions`.
+2. Turn on **Developer mode** (top right corner).
+3. Click **Load unpacked** and select this repository's folder (the one containing `manifest.json`).
 
-1. Entre na sua conta em https://www.instagram.com.
-2. Clique no ícone da extensão. O painel abre no canto da página.
-3. Clique em **Analisar seguidores**.
+## Usage
 
-O painel tem três abas:
+1. Log in at https://www.instagram.com.
+2. Click the extension icon. The panel opens in the corner of the page.
+3. Click **Scan followers**.
 
-- **Não te seguem**: contas que você segue e que não te seguem de volta.
-- **Você não segue**: contas que te seguem e que você não segue.
-- **Ignorados**: contas que você marcou para esconder da primeira aba (artistas, marcas etc.).
+The panel follows your browser's language (English or Portuguese).
 
-Também dá para buscar, ocultar contas verificadas, copiar os @, exportar CSV e deixar de seguir direto pelo painel (pede confirmação antes).
+It has three tabs:
 
-O resultado fica salvo no navegador (`chrome.storage.local`), então dá para fechar e abrir de novo sem refazer a análise.
+- **Not following back**: accounts you follow that don't follow you back.
+- **You don't follow**: accounts that follow you that you don't follow.
+- **Ignored**: accounts you chose to hide from the first tab (artists, brands, etc.).
 
-## Como funciona
+You can also search, hide verified accounts, copy the @s, export a CSV and unfollow straight from the panel (it asks for confirmation first).
 
-A extensão chama a mesma API interna que o site do Instagram usa, com a sessão que já está logada no navegador:
+Results are saved in the browser (`chrome.storage.local`), so you can close the panel and reopen it without scanning again.
+
+## How it works
+
+The extension calls the same internal API the Instagram website uses, with the session already logged in to your browser:
 
 - `GET /api/v1/friendships/{id}/following/`
 - `GET /api/v1/friendships/{id}/followers/`
-- `POST /api/v1/friendships/destroy/{id}/` (deixar de seguir)
+- `POST /api/v1/friendships/destroy/{id}/` (unfollow)
 
-Nenhum dado sai do seu navegador.
+No data leaves your browser.
 
-## Avisos
+## Caveats
 
-- O Instagram limita a quantidade de requisições. A extensão espera entre uma página e outra e pausa sozinha quando recebe um "aguarde". Em contas com milhares de seguidores, a análise pode levar alguns minutos.
-- Não deixe de seguir dezenas de contas em sequência: o Instagram pode bloquear a ação temporariamente.
-- A API não é oficial e pode mudar sem aviso.
+- Instagram limits how many requests you can make. The extension waits between pages and pauses on its own when Instagram asks it to slow down. Accounts with thousands of followers can take a few minutes to scan.
+- Don't unfollow dozens of accounts in a row: Instagram may temporarily block the action.
+- The API is unofficial and can change without notice.
 
-## Aviso legal
+## Disclaimer
 
-Projeto pessoal e de código aberto, sem nenhuma ligação com o Instagram ou a Meta. "Instagram" é marca registrada da Meta Platforms, Inc.
+Personal, open-source project with no affiliation with Instagram or Meta. "Instagram" is a trademark of Meta Platforms, Inc.
 
-A extensão usa endpoints internos e não documentados do Instagram. Automatizar o acesso ao serviço pode violar os [Termos de Uso do Instagram](https://help.instagram.com/581066165581870) e levar a bloqueios temporários ou restrições na conta. Use por sua conta e risco.
+The extension uses internal, undocumented Instagram endpoints. Automating access to the service may violate [Instagram's Terms of Use](https://help.instagram.com/581066165581870) and lead to temporary blocks or account restrictions. Use at your own risk.
 
-## Licença
+## License
 
 [MIT](LICENSE)
