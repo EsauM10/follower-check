@@ -286,8 +286,8 @@
     .bar { height: 4px; background: #efefef; border-radius: 2px; overflow: hidden; }
     .bar > div { height: 100%; background: #0095f6; transition: width .3s; }
     .tabs { display: flex; border-bottom: 1px solid #dbdbdb; }
-    .tabs button { flex: 1; background: none; border: 0; padding: 8px 4px; cursor: pointer; font-size: 12px;
-      font-weight: 600; color: #737373; border-bottom: 2px solid transparent; }
+    .tabs button { flex: auto; background: none; border: 0; padding: 8px 6px; cursor: pointer; font-size: 12px;
+      font-weight: 600; color: #737373; border-bottom: 2px solid transparent; white-space: nowrap; }
     .tabs button.active { color: #111; border-bottom-color: #111; }
     input[type=search] { flex: 1; padding: 7px 10px; border: 1px solid #dbdbdb; border-radius: 8px; font-size: 13px;
       background: #fafafa; color: #111; outline: none; }
