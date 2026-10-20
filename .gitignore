@@ -1,0 +1,16 @@
+# Páginas salvas do Instagram contêm tokens de sessão e dados pessoais
+*.html
+*.htm
+*_files/
+
+# Exportações da extensão
+*.csv
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+*.zip
+*.crx
+*.pem
