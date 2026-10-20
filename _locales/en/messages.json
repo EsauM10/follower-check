@@ -1,0 +1,140 @@
+{
+  "extName": {
+    "message": "Follower Check - Who doesn't follow you back"
+  },
+  "extDescription": {
+    "message": "Lists the Instagram accounts you follow that don't follow you back."
+  },
+  "subtitle": {
+    "message": "Who doesn't follow you back"
+  },
+  "close": {
+    "message": "Close"
+  },
+  "scanning": {
+    "message": "Scanning…"
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "cancelling": {
+    "message": "Cancelling…"
+  },
+  "scanStart": {
+    "message": "Scan followers"
+  },
+  "scanRefresh": {
+    "message": "Refresh scan"
+  },
+  "metaCounts": {
+    "message": "Followers: {0} · Following: {1}"
+  },
+  "metaUpdated": {
+    "message": "Updated {0}"
+  },
+  "tabNotBack": {
+    "message": "Not following back ({0})"
+  },
+  "tabFans": {
+    "message": "You don't follow ({0})"
+  },
+  "tabIgnored": {
+    "message": "Ignored ({0})"
+  },
+  "searchPlaceholder": {
+    "message": "Search…"
+  },
+  "hideVerified": {
+    "message": "Hide verified"
+  },
+  "copyUsernames": {
+    "message": "Copy @s"
+  },
+  "copied": {
+    "message": "Copied!"
+  },
+  "exportCsv": {
+    "message": "Export CSV"
+  },
+  "emptyIntro": {
+    "message": "Click \"Scan followers\" to compare who you follow with who follows you."
+  },
+  "emptyIntroNote": {
+    "message": "Large accounts can take a few minutes — Instagram limits how fast requests can be made."
+  },
+  "emptyNotBack": {
+    "message": "Everyone you follow follows you back 🎉"
+  },
+  "emptyList": {
+    "message": "No accounts here."
+  },
+  "verified": {
+    "message": "Verified"
+  },
+  "privateAccount": {
+    "message": "Private account"
+  },
+  "ignore": {
+    "message": "Ignore"
+  },
+  "ignoreTitle": {
+    "message": "Stop showing this account"
+  },
+  "restore": {
+    "message": "Restore"
+  },
+  "restoreTitle": {
+    "message": "Move back to the list"
+  },
+  "unfollow": {
+    "message": "Unfollow"
+  },
+  "unfollowConfirm": {
+    "message": "Unfollow @{0}?"
+  },
+  "unfollowFailed": {
+    "message": "Failed to unfollow @{0}: {1}"
+  },
+  "loginRequired": {
+    "message": "Log in to Instagram to use the extension."
+  },
+  "errCancelled": {
+    "message": "Cancelled."
+  },
+  "errSession": {
+    "message": "Invalid session. Log in to Instagram and try again."
+  },
+  "errRetry": {
+    "message": "Instagram responded {0}. Retrying in {1}s…"
+  },
+  "errResponse": {
+    "message": "Instagram responded {0}"
+  },
+  "errGiveUp": {
+    "message": "Instagram keeps refusing ({0}). Try again later."
+  },
+  "loadingProfile": {
+    "message": "Fetching profile info…"
+  },
+  "loadingList": {
+    "message": "Loading {0}: {1}…"
+  },
+  "loadingListTotal": {
+    "message": "Loading {0}: {1} of {2}…"
+  },
+  "labelFollowing": {
+    "message": "accounts you follow"
+  },
+  "labelFollowers": {
+    "message": "your followers"
+  },
+  "csvHeader": {
+    "message": "username,name,private,verified,url"
+  },
+  "yes": {
+    "message": "yes"
+  },
+  "no": {
+    "message": "no"
+  }
+}

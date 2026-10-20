@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Follower Check - Quem não te segue de volta",
+  "name": "__MSG_extName__",
   "version": "1.0.0",
-  "description": "Lista as contas do Instagram que você segue e que não te seguem de volta.",
+  "default_locale": "en",
+  "description": "__MSG_extDescription__",
   "permissions": [
     "storage",
     "scripting"

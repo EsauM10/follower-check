@@ -2,7 +2,7 @@
   if (window.__followerCheckLoaded) return;
   window.__followerCheckLoaded = true;
 
-  // Mesmo App ID que o instagram.com web envia no header X-IG-App-ID (ver insta.html).
+  // Same App ID that instagram.com web sends in the X-IG-App-ID header.
   const APP_ID = '936619743392459';
   const PAGE_SIZE = 50;
   const API = 'https://www.instagram.com/api/v1';
@@ -21,10 +21,15 @@
     hideVerified: false,
   };
 
-  // ---------- utilidades ----------
+  // ---------- utils ----------
 
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const jitter = (min, max) => min + Math.random() * (max - min);
+
+  // Translated string from _locales; {0}, {1}… are replaced by the given args.
+  function t(key, ...args) {
+    return chrome.i18n.getMessage(key).replace(/\{(\d)\}/g, (_, i) => args[i] ?? '');
+  }
 
   function getCookie(name) {
     const row = document.cookie.split('; ').find((c) => c.startsWith(name + '='));
@@ -49,16 +54,16 @@
 
     let lastError = '';
     for (let attempt = 0; attempt < retries; attempt++) {
-      if (state.cancel) throw new Error('Cancelado.');
+      if (state.cancel) throw new Error(t('errCancelled'));
       const res = await fetch(API + path, { method, body, headers, credentials: 'include' });
 
       let data = null;
-      try { data = await res.json(); } catch { /* resposta não-JSON */ }
+      try { data = await res.json(); } catch { /* non-JSON response */ }
       const detail = `HTTP ${res.status}${data?.message ? ` – ${data.message}` : ''}`;
       console.debug('[Follower Check]', method, path, detail, data);
 
       if (res.status === 401 || data?.message === 'login_required' || data?.require_login) {
-        throw new Error('Sessão inválida. Faça login no Instagram e tente novamente.');
+        throw new Error(t('errSession'));
       }
 
       const rateLimited = res.status === 429 ||
@@ -66,18 +71,18 @@
       if (rateLimited || res.status >= 500) {
         lastError = detail;
         if (attempt + 1 >= retries) break;
-        // 429 = limite real (espera longa); 5xx = instabilidade (espera curta).
+        // 429 = real rate limit (long wait); 5xx = flakiness (short wait).
         const wait = rateLimited ? 60_000 * (attempt + 1) : 5_000 * (attempt + 1);
-        setStatus(`Instagram respondeu ${detail}. Tentando de novo em ${wait / 1000}s…`);
-        for (let t = 0; t < wait && !state.cancel; t += 1000) await sleep(1000);
+        setStatus(t('errRetry', detail, wait / 1000));
+        for (let s = 0; s < wait && !state.cancel; s += 1000) await sleep(1000);
         continue;
       }
       if (!res.ok || !data || data.status === 'fail') {
-        throw new Error(`Instagram respondeu ${detail}`);
+        throw new Error(t('errResponse', detail));
       }
       return data;
     }
-    throw new Error(`Instagram continua recusando (${lastError}). Tente novamente mais tarde.`);
+    throw new Error(t('errGiveUp', lastError));
   }
 
   async function fetchList(uid, kind, total, label) {
@@ -104,15 +109,15 @@
       page++;
 
       const pct = total ? Math.min(100, Math.round((users.size / total) * 100)) : null;
-      setStatus(`Carregando ${label}: ${users.size}${total ? ` de ${total}` : ''}…`, pct);
+      setStatus(total ? t('loadingListTotal', label, users.size, total) : t('loadingList', label, users.size), pct);
 
-      // Pausas para não disparar o rate limit do Instagram.
+      // Pauses to avoid triggering Instagram's rate limit.
       if (maxId) await sleep(page % 10 === 0 ? jitter(4000, 7000) : jitter(700, 1500));
     } while (maxId);
     return [...users.values()];
   }
 
-  // ---------- persistência ----------
+  // ---------- persistence ----------
 
   const storeKey = () => `fc_data_${state.uid}`;
 
@@ -139,7 +144,7 @@
     return chrome.storage.local.set({ [`fc_ignored_${state.uid}`]: [...state.ignored] });
   }
 
-  // ---------- lógica ----------
+  // ---------- logic ----------
 
   function computeLists() {
     const followerIds = new Set(state.followers.map((u) => u.pk));
@@ -169,23 +174,23 @@
     state.cancel = false;
     render();
     try {
-      setStatus('Buscando informações do perfil…');
+      setStatus(t('loadingProfile'));
       let followerCount = 0;
       let followingCount = 0;
       try {
-        // Só serve para mostrar o @ e o total no progresso: uma tentativa, sem espera.
+        // Only used to show the @ and the totals in the progress: one attempt, no waiting.
         const info = await igFetch(`/users/${state.uid}/info/`, { retries: 1 });
         state.username = info.user?.username || state.username;
         followerCount = info.user?.follower_count || 0;
         followingCount = info.user?.following_count || 0;
       } catch (e) {
         if (state.cancel) throw e;
-        // Sem contagem total: o progresso só mostra o número carregado.
+        // No totals: the progress only shows how many were loaded.
       }
 
-      state.following = await fetchList(state.uid, 'following', followingCount, 'quem você segue');
+      state.following = await fetchList(state.uid, 'following', followingCount, t('labelFollowing'));
       await sleep(jitter(1500, 3000));
-      state.followers = await fetchList(state.uid, 'followers', followerCount, 'seus seguidores');
+      state.followers = await fetchList(state.uid, 'followers', followerCount, t('labelFollowers'));
       state.updatedAt = Date.now();
       await saveData();
       setStatus('');
@@ -199,7 +204,7 @@
 
   async function unfollow(pk, btn) {
     const user = state.following.find((u) => u.pk === pk);
-    if (!user || !confirm(`Deixar de seguir @${user.username}?`)) return;
+    if (!user || !confirm(t('unfollowConfirm', user.username))) return;
     btn.disabled = true;
     btn.textContent = '…';
     try {
@@ -209,8 +214,8 @@
       render();
     } catch (e) {
       btn.disabled = false;
-      btn.textContent = 'Deixar de seguir';
-      setStatus(`Falha ao deixar de seguir @${user.username}: ${e.message}`, null, true);
+      btn.textContent = t('unfollow');
+      setStatus(t('unfollowFailed', user.username, e.message), null, true);
     }
   }
 
@@ -223,9 +228,9 @@
 
   function exportCsv() {
     const list = currentList();
-    const rows = [['username', 'nome', 'privado', 'verificado', 'url']];
+    const rows = [t('csvHeader').split(',')];
     for (const u of list) {
-      rows.push([u.username, u.full_name, u.is_private ? 'sim' : 'nao', u.is_verified ? 'sim' : 'nao',
+      rows.push([u.username, u.full_name, u.is_private ? t('yes') : t('no'), u.is_verified ? t('yes') : t('no'),
         `https://www.instagram.com/${u.username}/`]);
     }
     const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
@@ -240,11 +245,11 @@
   async function copyUsernames(btn) {
     await navigator.clipboard.writeText(currentList().map((u) => '@' + u.username).join('\n'));
     const old = btn.textContent;
-    btn.textContent = 'Copiado!';
+    btn.textContent = t('copied');
     setTimeout(() => { btn.textContent = old; }, 1500);
   }
 
-  // ---------- UI (Shadow DOM para isolar do CSS do Instagram) ----------
+  // ---------- UI (Shadow DOM to isolate it from Instagram's CSS) ----------
 
   let host, root;
 
@@ -316,7 +321,7 @@
     root.innerHTML = `<style>${CSS}</style><div class="panel"></div>`;
     document.documentElement.appendChild(host);
 
-    // Delegação de eventos: o conteúdo do painel é re-renderizado com frequência.
+    // Event delegation: the panel content is re-rendered often.
     const panel = root.querySelector('.panel');
     panel.addEventListener('click', (ev) => {
       const btn = ev.target.closest('button');
@@ -324,7 +329,7 @@
       const { action, pk, tab } = btn.dataset;
       if (action === 'close') hide();
       else if (action === 'scan') scan();
-      else if (action === 'cancel') { state.cancel = true; setStatus('Cancelando…'); }
+      else if (action === 'cancel') { state.cancel = true; setStatus(t('cancelling')); }
       else if (action === 'tab') { state.tab = tab; render(); }
       else if (action === 'unfollow') unfollow(pk, btn);
       else if (action === 'ignore') toggleIgnore(pk);
@@ -340,9 +345,9 @@
         renderList();
       }
     });
-    // Evita que os atalhos de teclado do Instagram capturem o que é digitado na busca.
+    // Keep Instagram's keyboard shortcuts from capturing what is typed in the search box.
     panel.addEventListener('keydown', (ev) => ev.stopPropagation());
-    // Se a foto não carregar direto, pede para o service worker baixá-la; se falhar de novo, fica a inicial.
+    // If a picture fails to load directly, ask the service worker to fetch it; if that fails too, keep the initial.
     panel.addEventListener('error', async (ev) => {
       const img = ev.target;
       if (!(img instanceof HTMLImageElement)) return;
@@ -377,39 +382,40 @@
     const panel = root.querySelector('.panel');
     const hasData = state.updatedAt != null;
     const lists = hasData ? computeLists() : null;
+    const tabBtn = (tab, key) =>
+      `<button data-action="tab" data-tab="${tab}" class="${state.tab === tab ? 'active' : ''}">${esc(t(key, lists[tab].length))}</button>`;
 
     panel.innerHTML = `
       <header>
-        <h1>Follower Check<small>${state.username ? '@' + esc(state.username) : 'Quem não te segue de volta'}</small></h1>
-        <button class="icon-btn" data-action="close" title="Fechar">×</button>
+        <h1>Follower Check<small>${state.username ? '@' + esc(state.username) : esc(t('subtitle'))}</small></h1>
+        <button class="icon-btn" data-action="close" title="${esc(t('close'))}">×</button>
       </header>
       <div class="body">
         <div class="row">
           ${state.running
-            ? `<button class="primary" disabled>Analisando…</button>
-               <button class="ghost" data-action="cancel">Cancelar</button>`
-            : `<button class="primary" data-action="scan">${hasData ? 'Atualizar análise' : 'Analisar seguidores'}</button>`}
-          ${hasData ? `<span class="meta">Seguidores: ${state.followers.length} · Seguindo: ${state.following.length}<br>
-            Atualizado em ${new Date(state.updatedAt).toLocaleString('pt-BR')}</span>` : ''}
+            ? `<button class="primary" disabled>${esc(t('scanning'))}</button>
+               <button class="ghost" data-action="cancel">${esc(t('cancel'))}</button>`
+            : `<button class="primary" data-action="scan">${esc(t(hasData ? 'scanRefresh' : 'scanStart'))}</button>`}
+          ${hasData ? `<span class="meta">${esc(t('metaCounts', state.followers.length, state.following.length))}<br>
+            ${esc(t('metaUpdated', new Date(state.updatedAt).toLocaleString(chrome.i18n.getUILanguage())))}</span>` : ''}
         </div>
         <div class="status-wrap">${statusHtml()}</div>
         ${hasData ? `
           <div class="tabs">
-            <button data-action="tab" data-tab="notBack" class="${state.tab === 'notBack' ? 'active' : ''}">Não te seguem (${lists.notBack.length})</button>
-            <button data-action="tab" data-tab="fans" class="${state.tab === 'fans' ? 'active' : ''}">Você não segue (${lists.fans.length})</button>
-            <button data-action="tab" data-tab="ignored" class="${state.tab === 'ignored' ? 'active' : ''}">Ignorados (${lists.ignored.length})</button>
+            ${tabBtn('notBack', 'tabNotBack')}
+            ${tabBtn('fans', 'tabFans')}
+            ${tabBtn('ignored', 'tabIgnored')}
           </div>
           <div class="row">
-            <input type="search" placeholder="Buscar…" value="${esc(state.search)}">
-            <label><input type="checkbox" name="hideVerified" ${state.hideVerified ? 'checked' : ''}>Ocultar verificados</label>
+            <input type="search" placeholder="${esc(t('searchPlaceholder'))}" value="${esc(state.search)}">
+            <label><input type="checkbox" name="hideVerified" ${state.hideVerified ? 'checked' : ''}>${esc(t('hideVerified'))}</label>
           </div>
           <div class="row">
-            <button class="ghost" data-action="copy">Copiar @s</button>
-            <button class="ghost" data-action="csv">Exportar CSV</button>
+            <button class="ghost" data-action="copy">${esc(t('copyUsernames'))}</button>
+            <button class="ghost" data-action="csv">${esc(t('exportCsv'))}</button>
           </div>
           <ul></ul>
-        ` : state.running ? '' : `<div class="empty">Clique em "Analisar seguidores" para comparar quem você segue com quem te segue.<br><br>
-              Contas grandes podem levar alguns minutos — o Instagram limita a velocidade das requisições.</div>`}
+        ` : state.running ? '' : `<div class="empty">${esc(t('emptyIntro'))}<br><br>${esc(t('emptyIntroNote'))}</div>`}
       </div>`;
     if (hasData) renderList();
   }
@@ -420,27 +426,28 @@
     const list = currentList();
     if (!list.length) {
       ul.innerHTML = `<li class="empty" style="display:block;border:0">${
-        state.tab === 'notBack' ? 'Todo mundo que você segue te segue de volta 🎉' : 'Nenhuma conta aqui.'}</li>`;
+        esc(t(state.tab === 'notBack' ? 'emptyNotBack' : 'emptyList'))}</li>`;
       return;
     }
+    const ignored = state.tab === 'ignored';
     ul.innerHTML = list.map((u) => `
       <li>
         <div class="avatar">${esc(u.username[0] || '?')}<img src="${esc(u.pic)}" loading="lazy" alt=""></div>
         <div class="info">
           <a href="https://www.instagram.com/${esc(u.username)}/" target="_blank" rel="noopener">${esc(u.username)}</a>
-          ${u.is_verified ? '<span class="badge" title="Verificado">✔</span>' : ''}
-          ${u.is_private ? '<span class="lock" title="Conta privada">🔒</span>' : ''}
+          ${u.is_verified ? `<span class="badge" title="${esc(t('verified'))}">✔</span>` : ''}
+          ${u.is_private ? `<span class="lock" title="${esc(t('privateAccount'))}">🔒</span>` : ''}
           <div class="name">${esc(u.full_name)}</div>
         </div>
         <div class="actions">
           ${state.tab !== 'fans' ? `
-            <button class="ghost" data-action="ignore" data-pk="${u.pk}" title="${state.tab === 'ignored' ? 'Voltar para a lista' : 'Não mostrar mais esta conta'}">${state.tab === 'ignored' ? 'Restaurar' : 'Ignorar'}</button>
-            <button class="ghost danger" data-action="unfollow" data-pk="${u.pk}">Deixar de seguir</button>` : ''}
+            <button class="ghost" data-action="ignore" data-pk="${u.pk}" title="${esc(t(ignored ? 'restoreTitle' : 'ignoreTitle'))}">${esc(t(ignored ? 'restore' : 'ignore'))}</button>
+            <button class="ghost danger" data-action="unfollow" data-pk="${u.pk}">${esc(t('unfollow'))}</button>` : ''}
         </div>
       </li>`).join('');
   }
 
-  // ---------- abrir/fechar ----------
+  // ---------- open/close ----------
 
   async function show() {
     const uid = getCookie('ds_user_id');
@@ -448,8 +455,8 @@
     host.style.display = '';
     if (!uid) {
       root.querySelector('.panel').innerHTML = `
-        <header><h1>Follower Check</h1><button class="icon-btn" data-action="close">×</button></header>
-        <div class="body"><div class="empty">Faça login no Instagram para usar a extensão.</div></div>`;
+        <header><h1>Follower Check</h1><button class="icon-btn" data-action="close" title="${esc(t('close'))}">×</button></header>
+        <div class="body"><div class="empty">${esc(t('loginRequired'))}</div></div>`;
       return;
     }
     if (uid !== state.uid) {
