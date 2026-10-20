@@ -6,7 +6,7 @@ Extensão do Chrome que lista quem você segue no Instagram e não te segue de v
 
 1. Abra `chrome://extensions`.
 2. Ative o **Modo do desenvolvedor** (canto superior direito).
-3. Clique em **Carregar sem compactação** e selecione a pasta `extension` deste repositório.
+3. Clique em **Carregar sem compactação** e selecione a pasta deste repositório (onde está o `manifest.json`).
 
 ## Uso
 
